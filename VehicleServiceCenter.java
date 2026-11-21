@@ -95,6 +95,7 @@ class ServiceJob {
     public void clearPartsCost() { partsCost = 0; }
     public double getTotalBill() { return partsCost + labourCost; }
     public boolean isCompleted() { return "COMPLETED".equals(status); }
+    public boolean isWaiting() { return "WAITING".equals(status); }
 
     public void displayJob() {
         System.out.println("-----------------------------------");
@@ -415,6 +416,7 @@ public class VehicleServiceCenter {
         return value;
     }
 }
+
 
 
 
