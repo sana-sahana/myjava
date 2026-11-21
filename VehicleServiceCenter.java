@@ -85,6 +85,7 @@ class ServiceJob {
     public int getJobId() { return jobId; }
     public String getCustomerName() { return customerName; }
     public String getVehicleNumber() { return vehicleNumber; }
+    public String getVehicleNumberNormalized() { return vehicleNumber.toUpperCase(); }
     public String getServiceType() { return serviceType; }
     public String getStatus() { return status; }
     public double getPartsCost() { return partsCost; }
@@ -410,6 +411,7 @@ public class VehicleServiceCenter {
         return value;
     }
 }
+
 
 
 
