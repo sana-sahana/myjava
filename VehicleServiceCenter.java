@@ -180,6 +180,7 @@ class JobQueue {
     }
 
     public boolean isEmpty() { return front == null; }
+    public boolean hasWaitingJobs() { return front != null; }
 
     public void removeJob(int jobId) {
         Node current = front;
@@ -413,6 +414,7 @@ public class VehicleServiceCenter {
         return value;
     }
 }
+
 
 
 
