@@ -1,40 +1,36 @@
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Scanner;
 import java.util.Locale;
+import java.util.Scanner;
 
-// ================= CUSTOM EXCEPTIONS =================
-
+// Custom exception for job-related errors
 class InvalidJobException extends Exception {
     public InvalidJobException(String message) {
         super(message);
     }
 }
 
+// Custom exception for billing-related errors
 class InvalidBillException extends Exception {
     public InvalidBillException(String message) {
         super(message);
     }
 }
 
-// ================= VEHICLE CLASS =================
-
+// Stores vehicle details
 class Vehicle {
     private final String vehicleNumber;
     private String ownerName;
     private String model;
 
-    public Vehicle(String number, String owner, String model) {
-        if (number.trim().isEmpty() || owner.trim().isEmpty()
-                || model.trim().isEmpty()) {
-            throw new IllegalArgumentException("Fields cannot be empty.");
-        }
-
-        vehicleNumber = number.trim().toUpperCase(Locale.ROOT);
-        ownerName = owner.trim();
+    public Vehicle(String vehicleNumber, String ownerName, String model) {
+        if (vehicleNumber == null || ownerName == null || model == null || vehicleNumber.trim().isEmpty() || ownerName.trim().isEmpty() || model.trim().isEmpty()) throw new IllegalArgumentException("Vehicle details cannot be empty.");
+        this.vehicleNumber = vehicleNumber.trim().toUpperCase(Locale.ROOT);
+        this.ownerName = ownerName.trim();
         this.model = model.trim();
     }
 
+    // Getters allow other classes to access private data
     public String getVehicleNumber() {
         return vehicleNumber;
     }
@@ -49,42 +45,45 @@ class Vehicle {
 
     public void display() {
         System.out.println("Vehicle Number: " + vehicleNumber);
-        System.out.println("Owner: " + ownerName);
-        System.out.println("Model: " + model);
+        System.out.println("Owner Name   : " + ownerName);
+        System.out.println("Model        : " + model);
     }
 }
 
-// ================= ABSTRACTION =================
-
+// Abstract class that defines common service behavior
 abstract class Service {
     public abstract String getServiceType();
+
     public abstract double getServiceCharge();
 }
 
-// ================= INHERITANCE =================
-
+// General service with a fixed charge
 class GeneralService extends Service {
+    @Override
     public String getServiceType() {
         return "General Service";
     }
 
+    @Override
     public double getServiceCharge() {
         return 500;
     }
 }
 
+// Repair service with a different charge
 class RepairService extends Service {
+    @Override
     public String getServiceType() {
         return "Repair Service";
     }
 
+    @Override
     public double getServiceCharge() {
         return 1000;
     }
 }
 
-// ================= SPARE PART CLASS =================
-
+// Stores details of spare parts used in a job
 class SparePart {
     private String name;
     private int quantity;
@@ -93,8 +92,13 @@ class SparePart {
     public SparePart(String name, int quantity, double price)
             throws InvalidBillException {
 
-        if (name.trim().isEmpty() || quantity <= 0 || price <= 0) {
-            throw new InvalidBillException("Invalid spare part details!");
+        if (name == null || name.trim().isEmpty()) {
+            throw new InvalidBillException("Part name cannot be empty.");
+        }
+
+        if (quantity <= 0 || price <= 0) {
+            throw new InvalidBillException(
+                    "Quantity and price must be greater than zero.");
         }
 
         this.name = name.trim();
@@ -102,32 +106,42 @@ class SparePart {
         this.price = price;
     }
 
+    // Calculates total cost for this spare part
     public double getTotal() {
         return quantity * price;
     }
 
     public void display() {
-        System.out.println(name + " x " + quantity + " = Rs." + getTotal());
+        System.out.printf(Locale.US,
+                "%s | Quantity: %d | Price: Rs. %.2f | Total: Rs. %.2f%n",
+                name, quantity, price, getTotal());
     }
 }
 
-// ================= JOB CARD =================
-
+// Stores all information related to a service job
 class JobCard {
-    private final int jobId;
-    private final Vehicle vehicle;
-    private final String issue;
+    private static int nextJobId = 1001;
+
+    private int jobId;
+    private Vehicle vehicle;
+    private String issue;
     private Service service;
-    private String status = "Pending";
+    private ArrayList<SparePart> parts;
+    private String status;
 
-    private ArrayList<SparePart> parts = new ArrayList<>();
-    private double bill;
+    public JobCard(Vehicle vehicle, String issue, Service service)
+            throws InvalidJobException {
 
-    public JobCard(int id, Vehicle vehicle, String issue, Service service) {
-        jobId = id;
+        if (vehicle == null || issue == null || issue.trim().isEmpty() || service == null) {
+            throw new InvalidJobException("Invalid job card details.");
+        }
+
+        this.jobId = nextJobId++;
         this.vehicle = vehicle;
-        this.issue = issue;
+        this.issue = issue.trim();
         this.service = service;
+        this.parts = new ArrayList<>();
+        this.status = "Pending";
     }
 
     public int getJobId() {
@@ -142,14 +156,16 @@ class JobCard {
         return status;
     }
 
-    public void updateStatus(String status) {
+    public void setStatus(String status) {
         this.status = status;
     }
 
+    // Adds a spare part to this job card
     public void addPart(SparePart part) {
         parts.add(part);
     }
 
+    // Calculates the total cost of all spare parts
     public double getPartsCost() {
         double total = 0;
 
@@ -160,24 +176,24 @@ class JobCard {
         return total;
     }
 
+    // Calculates service charge plus spare parts cost
     public double calculateBill() {
         return service.getServiceCharge() + getPartsCost();
     }
 
-    public void setBill(double bill) {
-        this.bill = bill;
-    }
-
+    // Displays complete job card information
     public void display() {
-        System.out.println("\n========== JOB CARD ==========");
-        System.out.println("Job ID: " + jobId);
+        System.out.println("\nJob Card Details");
+        System.out.println("Job ID         : " + jobId);
         vehicle.display();
-        System.out.println("Issue: " + issue);
-        System.out.println("Service Type: " + service.getServiceType());
-        System.out.println("Status: " + status);
-        System.out.println("Service Charge: Rs." + service.getServiceCharge());
+        System.out.println("Issue          : " + issue);
+        System.out.println("Service Type   : " + service.getServiceType());
+        System.out.println("Status         : " + status);
+        System.out.printf(Locale.US, "Service Charge : Rs. %.2f%n",
+                service.getServiceCharge());
 
         System.out.println("Spare Parts:");
+
         if (parts.isEmpty()) {
             System.out.println("No spare parts added.");
         } else {
@@ -186,61 +202,94 @@ class JobCard {
             }
         }
 
-        System.out.println("Parts Cost: Rs." + getPartsCost());
-        System.out.println("Total Bill: Rs." + calculateBill());
-        System.out.println("============================");
+        System.out.printf(Locale.US, "Parts Cost    : Rs. %.2f%n",
+                getPartsCost());
+
+        System.out.printf(Locale.US, "Total Bill    : Rs. %.2f%n",
+                calculateBill());
+    }
+
+    // Displays the final bill for the job
+    public void displayBillReceipt() {
+        System.out.println("\nBill Receipt");
+        System.out.println("Job ID       : " + jobId);
+        System.out.println("Customer     : " + vehicle.getOwnerName());
+        System.out.println("Vehicle      : " + vehicle.getVehicleNumber());
+        System.out.println("Service      : " + service.getServiceType());
+
+        System.out.println("Spare Parts:");
+
+        if (parts.isEmpty()) {
+            System.out.println("No spare parts used.");
+        } else {
+            for (SparePart part : parts) {
+                part.display();
+            }
+        }
+
+        System.out.printf(Locale.US, "Service Cost : Rs. %.2f%n",
+                service.getServiceCharge());
+
+        System.out.printf(Locale.US, "Parts Cost   : Rs. %.2f%n",
+                getPartsCost());
+
+        System.out.printf(Locale.US, "Total        : Rs. %.2f%n",
+                calculateBill());
     }
 }
 
-// ================= SELF-IMPLEMENTED QUEUE =================
-
+// Self-implemented queue using a linked list
 class ServiceQueue {
-    private Node front, rear;
 
-    // Linked-list node
+    // Each node stores a job ID and a reference to the next node
     private class Node {
         int jobId;
         Node next;
 
-        Node(int id) {
-            jobId = id;
+        Node(int jobId) {
+            this.jobId = jobId;
         }
     }
 
-    // Adds a job at the rear of the queue
-    public void addJob(int id) {
-        Node node = new Node(id);
+    private Node front;
+    private Node rear;
+
+    // Adds a job to the end of the queue
+    public void addJob(int jobId) {
+        Node newNode = new Node(jobId);
 
         if (rear == null) {
-            front = rear = node;
+            front = rear = newNode;
         } else {
-            rear.next = node;
-            rear = node;
+            rear.next = newNode;
+            rear = newNode;
         }
     }
 
-    // Removes the oldest job (FIFO)
-    public int removeJob() {
+    // Removes the oldest job from the queue
+    public Integer removeJob() {
         if (front == null) {
-            return -1;
+            return null;
         }
 
-        int id = front.jobId;
+        int jobId = front.jobId;
         front = front.next;
 
         if (front == null) {
             rear = null;
         }
 
-        return id;
+        return jobId;
     }
 
-    // Removes a particular job when its status changes
-    public void remove(int id) {
-        Node current = front, previous = null;
+    // Removes a particular job from the queue
+    public void remove(int jobId) {
+        Node current = front;
+        Node previous = null;
 
         while (current != null) {
-            if (current.jobId == id) {
+            if (current.jobId == jobId) {
+
                 if (previous == null) {
                     front = current.next;
                 } else {
@@ -259,77 +308,74 @@ class ServiceQueue {
         }
     }
 
-    public boolean contains(int id) {
+    // Checks whether a job is already in the queue
+    public boolean contains(int jobId) {
         Node current = front;
 
         while (current != null) {
-            if (current.jobId == id) {
+            if (current.jobId == jobId) {
                 return true;
             }
+
             current = current.next;
         }
 
         return false;
     }
 
-    public void showJobs() {
-        if (front == null) {
+    public boolean isEmpty() {
+        return front == null;
+    }
+
+    // Displays jobs waiting to be serviced
+    public void display(HashMap<Integer, JobCard> jobs) {
+        if (isEmpty()) {
             System.out.println("No pending jobs.");
             return;
         }
 
-        System.out.print("Waiting Queue: ");
+        System.out.println("\nWaiting Queue");
 
         Node current = front;
 
         while (current != null) {
-            System.out.print(current.jobId + " -> ");
+            JobCard job = jobs.get(current.jobId);
+
+            if (job != null && job.getStatus().equals("Pending")) {
+                System.out.println("Job ID: " + job.getJobId()
+                        + " | Vehicle: "
+                        + job.getVehicle().getVehicleNumber());
+            }
+
             current = current.next;
         }
-
-        System.out.println("END");
     }
 }
 
-// ================= VEHICLE MANAGER =================
-
+// Manages vehicles, job cards, billing, and the service queue
 class VehicleManager {
-    private ArrayList<Vehicle> vehicles = new ArrayList<>();
-    private ArrayList<JobCard> jobs = new ArrayList<>();
-    private HashMap<Integer, JobCard> jobMap = new HashMap<>();
 
+    private ArrayList<Vehicle> vehicles = new ArrayList<>();
+    private ArrayList<JobCard> jobCards = new ArrayList<>();
+    private HashMap<Integer, JobCard> jobMap = new HashMap<>();
     private ServiceQueue queue = new ServiceQueue();
-    private int nextId = 1001;
 
     // Registers a new vehicle
-    public void registerVehicle(String number, String owner, String model) {
-        try {
-            number = number.trim().toUpperCase(Locale.ROOT);
-
-            if (searchVehicle(number) != null) {
-                System.out.println("Vehicle already registered!");
-                return;
-            }
-
-            Vehicle vehicle = new Vehicle(number, owner, model);
-            vehicles.add(vehicle);
-
-            System.out.println("Vehicle registered successfully!");
-        } catch (IllegalArgumentException e) {
-            System.out.println(e.getMessage());
+    public boolean registerVehicle(String number, String owner, String model) {
+        if (searchVehicle(number) != null) {
+            System.out.println("Vehicle is already registered.");
+            return false;
         }
+
+        vehicles.add(new Vehicle(number, owner, model));
+        System.out.println("Vehicle registered successfully.");
+        return true;
     }
 
-    // Searches using vehicle number
+    // Searches for a vehicle using its registration number
     public Vehicle searchVehicle(String number) {
-        if (number == null) {
-            return null;
-        }
-
-        number = number.trim().toUpperCase(Locale.ROOT);
-
         for (Vehicle vehicle : vehicles) {
-            if (vehicle.getVehicleNumber().equals(number)) {
+            if (vehicle.getVehicleNumber().equalsIgnoreCase(number.trim())) {
                 return vehicle;
             }
         }
@@ -338,12 +384,12 @@ class VehicleManager {
     }
 
     // Creates a job card for a registered vehicle
-    public void createJob(String number, String issue, int type) {
+    public JobCard createJob(String number, String issue, int type) {
         Vehicle vehicle = searchVehicle(number);
 
         if (vehicle == null) {
-            System.out.println("Vehicle is not registered!");
-            return;
+            System.out.println("Vehicle is not registered.");
+            return null;
         }
 
         Service service;
@@ -353,32 +399,40 @@ class VehicleManager {
         } else if (type == 2) {
             service = new RepairService();
         } else {
-            System.out.println("Invalid service type!");
-            return;
+            System.out.println("Invalid service type.");
+            return null;
         }
 
-        JobCard job = new JobCard(nextId++, vehicle, issue, service);
+        try {
+            JobCard job = new JobCard(vehicle, issue, service);
 
-        jobs.add(job);
-        jobMap.put(job.getJobId(), job);
-        queue.addJob(job.getJobId());
+            jobCards.add(job);
+            jobMap.put(job.getJobId(), job);
+            queue.addJob(job.getJobId());
 
-        System.out.println("Job card created!");
-        System.out.println("Job ID: " + job.getJobId());
+            System.out.println("Job card created successfully.");
+            System.out.println("Job ID: " + job.getJobId());
+
+            return job;
+
+        } catch (InvalidJobException e) {
+            System.out.println(e.getMessage());
+            return null;
+        }
     }
 
-    // Finds a job using its ID
+    // Searches for a job card using its ID
     public JobCard findJob(int id) throws InvalidJobException {
         JobCard job = jobMap.get(id);
 
         if (job == null) {
-            throw new InvalidJobException("Job ID not found!");
+            throw new InvalidJobException("Job ID not found.");
         }
 
         return job;
     }
 
-    // Displays registered vehicles
+    // Displays all registered vehicles
     public void displayVehicles() {
         if (vehicles.isEmpty()) {
             System.out.println("No vehicles registered.");
@@ -386,137 +440,152 @@ class VehicleManager {
         }
 
         for (Vehicle vehicle : vehicles) {
-            System.out.println("\n----------------");
+            System.out.println();
             vehicle.display();
         }
     }
 
     // Displays all job cards
     public void displayJobs() {
-        if (jobs.isEmpty()) {
-            System.out.println("No job cards found.");
+        if (jobCards.isEmpty()) {
+            System.out.println("No job cards available.");
             return;
         }
 
-        for (JobCard job : jobs) {
+        for (JobCard job : jobCards) {
             job.display();
         }
     }
 
-    // Updates service status
+    // Updates the status of a job card
     public void updateStatus(int id, int choice) {
         try {
             JobCard job = findJob(id);
 
-            if (choice < 1 || choice > 3) {
-                throw new InvalidJobException("Invalid status!");
+            String newStatus;
+
+            if (choice == 1) {
+                newStatus = "Pending";
+            } else if (choice == 2) {
+                newStatus = "In Progress";
+            } else if (choice == 3) {
+                newStatus = "Completed";
+            } else {
+                System.out.println("Invalid status choice.");
+                return;
             }
 
-            String status = choice == 1 ? "Pending"
-                    : choice == 2 ? "In Progress" : "Completed";
+            // Completed jobs cannot be reopened
+            if (job.getStatus().equals("Completed")
+                    && !newStatus.equals("Completed")) {
+                System.out.println("Completed jobs cannot be reopened.");
+                return;
+            }
 
+            // Remove the job from the queue before updating its status
             queue.remove(id);
-            job.updateStatus(status);
+            job.setStatus(newStatus);
 
-            if (choice == 1 && !queue.contains(id)) {
-                queue.addJob(id);
+            // Only pending jobs should remain in the waiting queue
+            if (newStatus.equals("Pending")) {
+                if (!queue.contains(id)) {
+                    queue.addJob(id);
+                }
             }
 
-            System.out.println("Status updated successfully!");
+            System.out.println("Status updated successfully.");
 
         } catch (InvalidJobException e) {
             System.out.println(e.getMessage());
         }
     }
 
-    // Adds spare parts to a job card
+    // Adds a spare part to an existing job card
     public void addParts(int id, String name, int quantity, double price) {
         try {
             JobCard job = findJob(id);
-            SparePart part = new SparePart(name, quantity, price);
 
+            if (job.getStatus().equals("Completed")) {
+                throw new InvalidBillException(
+                        "Cannot add parts to a completed job.");
+            }
+
+            SparePart part = new SparePart(name, quantity, price);
             job.addPart(part);
-            System.out.println("Spare part added successfully!");
+
+            System.out.println("Spare part added successfully.");
 
         } catch (InvalidJobException | InvalidBillException e) {
-            System.out.println(e.getMessage());
+            System.out.println("Error: " + e.getMessage());
         }
     }
 
-    // Generates the bill
+    // Generates and displays the bill for a job
     public void generateBill(int id) {
         try {
             JobCard job = findJob(id);
+            job.displayBillReceipt();
 
-            double total = job.calculateBill();
-
-            if (total < 0) {
-                throw new InvalidBillException("Invalid bill amount!");
-            }
-
-            job.setBill(total);
-
-            System.out.println("\n========== BILL ==========");
-            job.display();
-            System.out.println("Final Amount: Rs." + total);
-            System.out.println("========================");
-
-        } catch (InvalidJobException | InvalidBillException e) {
+        } catch (InvalidJobException e) {
             System.out.println(e.getMessage());
         }
     }
 
-    // Displays service history for a vehicle
+    // Displays all previous jobs for a particular vehicle
     public void serviceHistory(String number) {
+        Vehicle vehicle = searchVehicle(number);
+
+        if (vehicle == null) {
+            System.out.println("Vehicle not found.");
+            return;
+        }
+
         boolean found = false;
 
-        for (JobCard job : jobs) {
-            if (job.getVehicle().getVehicleNumber()
-                    .equalsIgnoreCase(number.trim())) {
+        System.out.println("\nService History for "
+                + vehicle.getVehicleNumber());
 
+        for (JobCard job : jobCards) {
+            if (job.getVehicle().getVehicleNumber()
+                    .equals(vehicle.getVehicleNumber())) {
                 job.display();
                 found = true;
             }
         }
 
         if (!found) {
-            System.out.println("No service history found.");
+            System.out.println("No service history available.");
         }
     }
 
-    // Processes the oldest waiting job
+    // Processes the oldest pending job in the queue
     public void processNextJob() {
-        int id = queue.removeJob();
+        while (!queue.isEmpty()) {
+            Integer id = queue.removeJob();
+            JobCard job = jobMap.get(id);
 
-        if (id == -1) {
-            System.out.println("Queue is empty.");
-            return;
-        }
+            if (job != null && job.getStatus().equals("Pending")) {
+                job.setStatus("In Progress");
 
-        try {
-            JobCard job = findJob(id);
+                System.out.println("Job " + id
+                        + " is now In Progress.");
 
-            if (job.getStatus().equals("Completed")) {
-                System.out.println("Job already completed.");
                 return;
             }
-
-            job.updateStatus("In Progress");
-            System.out.println("Job " + id + " is now In Progress.");
-
-        } catch (InvalidJobException e) {
-            System.out.println(e.getMessage());
         }
+
+        System.out.println("No pending jobs.");
     }
 
+    // Displays the waiting queue
     public void displayQueue() {
-        queue.showJobs();
+        queue.display(jobMap);
     }
 }
 
-// ================= MAIN PROGRAM =================
-
+// Main class that provides the menu and accepts user input
 public class VehicleServiceCenter {
+
     private static Scanner sc = new Scanner(System.in);
     private static VehicleManager manager = new VehicleManager();
 
@@ -524,61 +593,60 @@ public class VehicleServiceCenter {
         int choice;
 
         do {
-            System.out.println("\n===== VEHICLE SERVICE CENTER =====");
-            System.out.println("1. Register Vehicle");
-            System.out.println("2. Display Vehicles");
-            System.out.println("3. Search Vehicle");
-            System.out.println("4. Create Job Card");
-            System.out.println("5. Display Job Cards");
-            System.out.println("6. Update Service Status");
-            System.out.println("7. Add Spare Parts");
-            System.out.println("8. Generate Bill");
-            System.out.println("9. Service History");
-            System.out.println("10. View Waiting Queue");
-            System.out.println("11. Process Next Job");
-            System.out.println("0. Exit");
-
+            displayMenu();
             choice = readInt("Enter choice: ");
 
             switch (choice) {
                 case 1:
                     registerVehicle();
                     break;
+
                 case 2:
                     manager.displayVehicles();
                     break;
+
                 case 3:
                     searchVehicle();
                     break;
+
                 case 4:
                     createJob();
                     break;
+
                 case 5:
                     manager.displayJobs();
                     break;
+
                 case 6:
                     updateStatus();
                     break;
+
                 case 7:
                     addParts();
                     break;
+
                 case 8:
                     generateBill();
                     break;
+
                 case 9:
                     serviceHistory();
                     break;
+
                 case 10:
                     manager.displayQueue();
                     break;
+
                 case 11:
                     manager.processNextJob();
                     break;
+
                 case 0:
-                    System.out.println("Thank you for visiting!");
+                    System.out.println("Exiting Vehicle Service Center.");
                     break;
+
                 default:
-                    System.out.println("Invalid choice!");
+                    System.out.println("Invalid choice.");
             }
 
         } while (choice != 0);
@@ -586,8 +654,24 @@ public class VehicleServiceCenter {
         sc.close();
     }
 
-    // ================= MENU FUNCTIONS =================
+    // Displays all available operations
+    private static void displayMenu() {
+        System.out.println("\nVehicle Service Center Menu");
+        System.out.println("1. Register Vehicle");
+        System.out.println("2. Display Vehicles");
+        System.out.println("3. Search Vehicle");
+        System.out.println("4. Create Job Card");
+        System.out.println("5. Display Job Cards");
+        System.out.println("6. Update Service Status");
+        System.out.println("7. Add Spare Parts");
+        System.out.println("8. Generate Bill");
+        System.out.println("9. Service History");
+        System.out.println("10. View Waiting Queue");
+        System.out.println("11. Process Next Job");
+        System.out.println("0. Exit");
+    }
 
+    // Accepts vehicle information and registers it
     private static void registerVehicle() {
         String number = readText("Vehicle number: ");
         String owner = readText("Owner name: ");
@@ -596,6 +680,7 @@ public class VehicleServiceCenter {
         manager.registerVehicle(number, owner, model);
     }
 
+    // Searches for a vehicle and displays its details
     private static void searchVehicle() {
         String number = readText("Enter vehicle number: ");
         Vehicle vehicle = manager.searchVehicle(number);
@@ -607,18 +692,20 @@ public class VehicleServiceCenter {
         }
     }
 
+    // Accepts information required to create a job card
     private static void createJob() {
         String number = readText("Vehicle number: ");
         String issue = readText("Issue description: ");
 
-        System.out.println("1. General Service (Rs.500)");
-        System.out.println("2. Repair Service (Rs.1000)");
+        System.out.println("1. General Service (Rs. 500)");
+        System.out.println("2. Repair Service (Rs. 1000)");
 
-        int type = readInt("Service type: ");
+        int type = readInt("Choose service type: ");
 
         manager.createJob(number, issue, type);
     }
 
+    // Accepts a job ID and updates its service status
     private static void updateStatus() {
         int id = readInt("Job ID: ");
 
@@ -631,6 +718,7 @@ public class VehicleServiceCenter {
         manager.updateStatus(id, status);
     }
 
+    // Accepts spare part information and adds it to a job
     private static void addParts() {
         int id = readInt("Job ID: ");
         String name = readText("Part name: ");
@@ -640,18 +728,19 @@ public class VehicleServiceCenter {
         manager.addParts(id, name, quantity, price);
     }
 
+    // Requests a job ID and displays its bill
     private static void generateBill() {
         int id = readInt("Job ID: ");
         manager.generateBill(id);
     }
 
+    // Requests a vehicle number and displays its service history
     private static void serviceHistory() {
         String number = readText("Vehicle number: ");
         manager.serviceHistory(number);
     }
 
-    // ================= INPUT METHODS =================
-
+    // Reads non-empty text input from the user
     private static String readText(String prompt) {
         while (true) {
             System.out.print(prompt);
@@ -665,27 +754,38 @@ public class VehicleServiceCenter {
         }
     }
 
+    // Reads an integer and handles invalid input
     private static int readInt(String prompt) {
         while (true) {
             System.out.print(prompt);
+            String input = sc.nextLine();
 
             try {
-                return Integer.parseInt(sc.nextLine().trim());
+                return Integer.parseInt(input.trim());
             } catch (NumberFormatException e) {
-                System.out.println("Enter a valid integer.");
+                System.out.println("Please enter a valid number.");
             }
         }
     }
 
+    // Reads a valid decimal value
     private static double readDouble(String prompt) {
         while (true) {
             System.out.print(prompt);
+            String input = sc.nextLine();
 
             try {
-                return Double.parseDouble(sc.nextLine().trim());
+                double value = Double.parseDouble(input.trim());
+
+                if (value > 0) {
+                    return value;
+                }
+
             } catch (NumberFormatException e) {
-                System.out.println("Enter a valid number.");
+                System.out.println("Invalid price.");
             }
+
+            System.out.println("Price must be greater than zero.");
         }
     }
 }
