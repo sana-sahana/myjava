@@ -94,6 +94,7 @@ class ServiceJob {
     public void addPartsCost(double cost) { partsCost += cost; }
     public void clearPartsCost() { partsCost = 0; }
     public double getTotalBill() { return partsCost + labourCost; }
+    public boolean isCompleted() { return "COMPLETED".equals(status); }
 
     public void displayJob() {
         System.out.println("-----------------------------------");
@@ -411,6 +412,7 @@ public class VehicleServiceCenter {
         return value;
     }
 }
+
 
 
 
