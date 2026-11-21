@@ -139,6 +139,7 @@ class SparePart {
     }
 
     public double getTotalCost() { return quantity * price; }
+    public boolean hasValidQuantity() { return quantity > 0; }
     public String getName() { return name; }
     public int getQuantity() { return quantity; }
     public double getPrice() { return price; }
@@ -412,6 +413,7 @@ public class VehicleServiceCenter {
         return value;
     }
 }
+
 
 
 
