@@ -22,6 +22,7 @@ abstract class Service {
     private double labourCost;
 
     public Service(double labourCost) {
+        if (labourCost < 0) throw new IllegalArgumentException("Labour cost cannot be negative.");
         this.labourCost = labourCost;
     }
 
@@ -70,11 +71,14 @@ class ServiceJob {
                      String vehicleNumber, String serviceType,
                      double labourCost) {
         this.jobId = jobId;
-        this.customerName = customerName;
-        this.vehicleNumber = vehicleNumber;
+        if (customerName == null || customerName.trim().isEmpty()) throw new IllegalArgumentException("Customer name cannot be empty.");
+        this.customerName = customerName.trim();
+        if (vehicleNumber == null || vehicleNumber.trim().isEmpty()) throw new IllegalArgumentException("Vehicle number cannot be empty.");
+        this.vehicleNumber = vehicleNumber.trim().toUpperCase();
         this.serviceType = serviceType;
         this.status = "WAITING";
         this.partsCost = 0;
+        if (labourCost < 0) throw new IllegalArgumentException("Labour cost cannot be negative.");
         this.labourCost = labourCost;
     }
 
@@ -87,6 +91,7 @@ class ServiceJob {
     public double getLabourCost() { return labourCost; }
     public void setStatus(String status) { this.status = status; }
     public void addPartsCost(double cost) { partsCost += cost; }
+    public void clearPartsCost() { partsCost = 0; }
     public double getTotalBill() { return partsCost + labourCost; }
 
     public void displayJob() {
@@ -120,12 +125,22 @@ class SparePart {
         if (price <= 0) {
             throw new InvalidPartException("Price must be greater than zero.");
         }
-        this.name = name;
+        if (price > Double.MAX_VALUE / quantity) {
+            throw new InvalidPartException("Total part cost is too large.");
+        }
+        this.name = name.trim();
+        if (price > Double.MAX_VALUE / quantity) {
+            throw new InvalidPartException("Total part cost is too large.");
+        }
         this.quantity = quantity;
         this.price = price;
     }
 
     public double getTotalCost() { return quantity * price; }
+    public String getName() { return name; }
+    public int getQuantity() { return quantity; }
+    public double getPrice() { return price; }
+    public String getDisplayName() { return name + " (" + quantity + " @ Rs. " + price + ")"; }
 
     public void displayPart() {
         System.out.println("Part: " + name);
@@ -147,6 +162,7 @@ class JobQueue {
     private Node rear;
 
     public void enqueue(ServiceJob job) {
+        if (job == null) throw new IllegalArgumentException("Job cannot be null.");
         Node newNode = new Node(job);
         if (rear == null) front = rear = newNode;
         else { rear.next = newNode; rear = newNode; }
@@ -159,6 +175,8 @@ class JobQueue {
         if (front == null) rear = null;
         return job;
     }
+
+    public boolean isEmpty() { return front == null; }
 
     public void removeJob(int jobId) {
         Node current = front;
@@ -236,9 +254,17 @@ public class VehicleServiceCenter {
     static void createJob() {
         System.out.println("\n CREATE JOB CARD ");
         System.out.print("Enter customer name: ");
-        String customerName = sc.nextLine();
+        String customerName = sc.nextLine().trim();
+        if (customerName.isEmpty()) {
+            System.out.println("Customer name cannot be empty.");
+            return;
+        }
         System.out.print("Enter vehicle number: ");
-        String vehicleNumber = sc.nextLine().toUpperCase();
+        String vehicleNumber = sc.nextLine().trim().toUpperCase();
+        if (vehicleNumber.isEmpty()) {
+            System.out.println("Vehicle number cannot be empty.");
+            return;
+        }
         System.out.println("Select service type:");
         System.out.println("1. General Service");
         System.out.println("2. Repair Service");
@@ -334,14 +360,18 @@ public class VehicleServiceCenter {
             System.out.println("Parts Cost: Rs. " + job.getPartsCost());
             System.out.println("Labour Cost: Rs. " + job.getLabourCost());
             System.out.println("-----------------------------");
-            System.out.println("TOTAL BILL: Rs. " + job.getTotalBill());
+            System.out.printf("TOTAL BILL: Rs. %.2f%n", job.getTotalBill());
             System.out.println("-----------------------------");
         } catch (InvalidJobCardException e) { System.out.println(e.getMessage()); }
     }
 
     static void serviceHistory() {
         System.out.print("Enter vehicle number: ");
-        String vehicleNumber = sc.nextLine().toUpperCase();
+        String vehicleNumber = sc.nextLine().trim().toUpperCase();
+        if (vehicleNumber.isEmpty()) {
+            System.out.println("Vehicle number cannot be empty.");
+            return;
+        }
         boolean found = false;
         System.out.println("\n===== SERVICE HISTORY =====");
         for (ServiceJob job : jobs) {
@@ -380,5 +410,17 @@ public class VehicleServiceCenter {
         return value;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
