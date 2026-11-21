@@ -143,6 +143,7 @@ class SparePart {
     public String getName() { return name; }
     public int getQuantity() { return quantity; }
     public double getPrice() { return price; }
+    public boolean hasValidPrice() { return price > 0; }
     public String getDisplayName() { return name + " (" + quantity + " @ Rs. " + price + ")"; }
 
     public void displayPart() {
@@ -414,6 +415,7 @@ public class VehicleServiceCenter {
         return value;
     }
 }
+
 
 
 
