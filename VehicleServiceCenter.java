@@ -199,6 +199,8 @@ public class VehicleServiceCenter {
     static HashSet<String> vehicleNumbers = new HashSet<>();
     static JobQueue waitingQueue = new JobQueue();
     static int nextId = 1;
+    static final double GENERAL_SERVICE_LABOUR = 500.0;
+    static final double REPAIR_SERVICE_LABOUR = 1000.0;
 
     public static void main(String[] args) {
         int choice;
@@ -243,8 +245,8 @@ public class VehicleServiceCenter {
         System.out.print("Enter choice: ");
         int serviceChoice = readInt();
         Service service;
-        if (serviceChoice == 1) service = new GeneralService(500);
-        else if (serviceChoice == 2) service = new RepairService(1000);
+        if (serviceChoice == 1) service = new GeneralService(GENERAL_SERVICE_LABOUR);
+        else if (serviceChoice == 2) service = new RepairService(REPAIR_SERVICE_LABOUR);
         else { System.out.println("Invalid service type."); return; }
         ServiceJob job = new ServiceJob(nextId, customerName, vehicleNumber,
                 service.getServiceType(), service.getLabourCost());
@@ -378,3 +380,5 @@ public class VehicleServiceCenter {
         return value;
     }
 }
+
+
