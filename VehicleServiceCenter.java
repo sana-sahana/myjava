@@ -65,6 +65,7 @@ class ServiceJob {
     private String serviceType;
     private String status;
     private double partsCost;
+    private ArrayList<SparePart> parts = new ArrayList<>();
     private double labourCost;
 
     public ServiceJob(int jobId, String customerName,
@@ -94,6 +95,12 @@ class ServiceJob {
     public void addPartsCost(double cost) { partsCost += cost; }
     public void clearPartsCost() { partsCost = 0; }
     public double getTotalBill() { return partsCost + labourCost; }
+    public void addPart(SparePart part) {
+        if (part == null) throw new IllegalArgumentException("Part cannot be null.");
+        parts.add(part);
+        addPartsCost(part.getTotalCost());
+    }
+    public ArrayList<SparePart> getParts() { return new ArrayList<>(parts); }
     public boolean isCompleted() { return "COMPLETED".equals(status); }
     public boolean isWaiting() { return "WAITING".equals(status); }
 
@@ -346,7 +353,7 @@ public class VehicleServiceCenter {
             double price = readDouble();
             SparePart part = new SparePart(partName, quantity, price);
             part.displayPart();
-            job.addPartsCost(part.getTotalCost());
+            job.addPart(part);
             System.out.println("Spare parts added to job successfully!");
         } catch (InvalidJobCardException | InvalidPartException e) {
             System.out.println("Error: " + e.getMessage());
@@ -363,6 +370,9 @@ public class VehicleServiceCenter {
             System.out.println("Customer: " + job.getCustomerName());
             System.out.println("Vehicle: " + job.getVehicleNumber());
             System.out.println("Service: " + job.getServiceType());
+            for (SparePart billedPart : job.getParts()) {
+                System.out.println("Part: " + billedPart.getDisplayName());
+            }
             System.out.println("Parts Cost: Rs. " + job.getPartsCost());
             System.out.println("Labour Cost: Rs. " + job.getLabourCost());
             System.out.println("-----------------------------");
@@ -416,6 +426,8 @@ public class VehicleServiceCenter {
         return value;
     }
 }
+
+
 
 
 
